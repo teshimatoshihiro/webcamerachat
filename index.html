@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.webrtc.ecl.ntt.com/skyway-4.4.5.js"></script>
+  <title>webcamera.chat</title>
+</head>
+
+<body>
+  <video id="my-video" width="400px" autoplay muted playsinline></video>
+  <p id="my-id"></p>
+  <input id="their-id"></input>
+  <button id="make-call">発信</button>
+  <video id="their-video" width="400px" autoplay muted playsinline></video>
+
+  <form>
+    <fieldset>
+      <legend>チャット入力</legend>
+      <div>
+        名前: <input type="text" id="name">
+      </div>
+      <div>
+        コメント: <input type="text" id="text">
+      </div>
+      <div>
+        <button type="button" id="send">send</button>
+      </div>
+    </fieldset>
+  </form>
+
+  <!-- データ出力場所 -->
+  <ul id="output"></ul>
+
+  <script>
+
+    //Peer作成
+    const peer = new Peer({
+      key: '',
+      debug: 3
+    });
+
+    //PeerID取得
+    peer.on('open', () => {
+      document.getElementById('my-id').textContent = peer.id;
+    });
+
+    let localStream;
+
+    // カメラ映像取得
+    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+      .then(stream => {
+        // 成功時にvideo要素にカメラ映像をセットし、再生
+        const videoElm = document.getElementById('my-video');
+        videoElm.srcObject = stream;
+        videoElm.play();
+        // 着信時に相手にカメラ映像を返せるように、グローバル変数に保存しておく
+        localStream = stream;
+      }).catch(error => {
+        // 失敗時にはエラーログを出力
+        console.error('mediaDevice.getUserMedia() error:', error);
+        return;
+      });
+
+    // 発信処理
+    document.getElementById('make-call').onclick = () => {
+      const theirID = document.getElementById('their-id').value;
+      const mediaConnection = peer.call(theirID, localStream);
+      setEventListener(mediaConnection);
+    };
+
+    // イベントリスナを設置する関数
+    const setEventListener = mediaConnection => {
+      mediaConnection.on('stream', stream => {
+        // video要素にカメラ映像をセットして再生
+        const videoElm = document.getElementById('their-video')
+        videoElm.srcObject = stream;
+        videoElm.play();
+      });
+    }
+
+    //着信処理
+    peer.on('call', mediaConnection => {
+      mediaConnection.answer(localStream);
+      setEventListener(mediaConnection);
+    });
+
+    peer.on('error', err => {
+      alert(err.message);
+    });
+
+    peer.on('close', () => {
+      alert('通信が切断しました。');
+    });
+
+
+    ///////////////////////ここからチャット処理////////////////////////////////////////////////////////////
+    // 日時をいい感じの形式にする関数
+    function convertTimestampToDatetime(timestamp) {
+      const _d = timestamp ? new Date(timestamp * 1000) : new Date();
+      const Y = _d.getFullYear();
+      const m = (_d.getMonth() + 1).toString().padStart(2, '0');
+      const d = _d.getDate().toString().padStart(2, '0');
+      const H = _d.getHours().toString().padStart(2, '0');
+      const i = _d.getMinutes().toString().padStart(2, '0');
+      const s = _d.getSeconds().toString().padStart(2, '0');
+      return `${Y}/${m}/${d} ${H}:${i}:${s}`;
+    }
+  </script>
+  <!-- 以下にfirebaseのコードを貼り付けよう -->
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.2.0/firebase-app.js";
+
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      serverTimestamp,
+      query,
+      orderBy,
+      onSnapshot,
+    } from "https://www.gstatic.com/firebasejs/10.2.0/firebase-firestore.js";
+
+    // TODO: Add SDKs for Firebase products that you want to use
+    // https://firebase.google.com/docs/web/setup#available-libraries
+
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "",
+      authDomain: "dada-4fa93.firebaseapp.com",
+      projectId: "dada-4fa93",
+      storageBucket: "dada-4fa93.appspot.com",
+      messagingSenderId: "987326974457",
+      appId: "1:987326974457:web:24b097269ca1e96f03d528"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    //送信ボタンクリック時にデータを送信
+    $("#send").on("click", function () {
+      // 送信時に必要な処理
+      //入力値を取得する処理
+      const postData = {
+        name: $("#name").val(),
+        text: $("#text").val(),
+        time: serverTimestamp(),
+      };
+      //データを送信する処理
+      //addDocについて11.30参照（Firebase入門：https://zenn.dev/nash/articles/6e18bd94eca63e)
+      // ランダムなIDが付与されたドキュメントの作成：addDoc
+      addDoc(collection(db, "webcamera"), postData);
+      $("#text").val("");
+    });
+
+
+    //データ取得条件の指定（今回は時間の新しい順に並び替えて取得）
+    const q = query(collection(db, "webcamera"), orderBy("time", "desc"));
+
+    onSnapshot(q, (querySnapshot) => {
+
+
+      //データ取得処理 
+      // onSnapshot(collection(db, "chat"), (querySnapshot) => {
+      //     console.log(querySnapshot.docs);
+
+      // データの取り出し(forEach:配列のループ処理
+      // (コールバック関数に実行したい内容を記述することで、配列の要素ひとつひとつに対して繰り返し処理を実行します forEach(function(value){})
+      // 参照11.30https://and-engineer.com/articles/YhM_2BMAAKtubeB- )
+
+      const documents = [];  //空の配列を準備する
+      querySnapshot.docs.forEach(function (doc) {
+        //querySnapshot.docs に対して繰り返し処理を用いて各要素に対して，.id でドキュメント ID（名前）を取得する．.data() でドキュメント中身（3 項目）を取得する．
+        const document = {
+          id: doc.id,
+          data: doc.data(),
+        };
+
+        //上のdocumentに追加する
+        documents.push(document);
+      });
+
+      console.log(documents);
+
+      // 画面表示するためのタグ生成
+      //空の配列を準備する
+      const htmlElements = [];
+      //documentsに繰り返しを用い各要素をタグの形にする。
+      documents.forEach(function (document) {
+        htmlElements.push(`
+      <li id="${document.id}">
+        <p>${document.data.name} at ${convertTimestampToDatetime(document.data.time.seconds)}</p>
+        <p>${document.data.text}</p>
+      </li>
+      `);
+      });
+
+      $("#output").html(htmlElements);
+    });
+
+
+  </script>
+  </script>
+</body>
+
+</html>

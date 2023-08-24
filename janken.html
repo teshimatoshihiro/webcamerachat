@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="stylesheet" href="css/sample.css">
+  <title>じゃんけん</title>
+</head>
+
+<body>
+  <header>
+    <h1>じゃんけん</h1>
+  </header>
+
+  <main>
+    <ul>
+      <li id="gu">グー</li>
+      <li id="cho">チョキ</li>
+      <li id="par">パー</li>
+    </ul>
+    <div id="computer_hand">コンピュータの出した手は？</div>
+    <div id="result">結果は？</div>
+    <div id="win_count">勝利回数: 0</div>
+    <div id="total_count">試行回数: 0</div>
+    <div id="win_percentage">勝率: 0%</div>
+  </main>
+
+  <footer>フッター</footer>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script>
+    let winCount = 0;
+    let totalCount = 0;
+
+    // 指定した範囲で乱数をつくる関数
+    function createRandomNumber(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    };
+
+    // 0から2を入れるとじゃんけんの手を出力する関数
+    function getComputerHand(randomNumber) {
+      return ['グー', 'チョキ', 'パー'][randomNumber];
+    };
+
+    // 自分の数値と敵の数値を入れると結果を出力する関数
+    function getJankenResult(myHandNumber, computerHandNumber) {
+      return [
+        ['あいこ', '勝ち', '負け'],
+        ['負け', 'あいこ', '勝ち'],
+        ['勝ち', '負け', 'あいこ'],
+      ][myHandNumber][computerHandNumber];
+    };
+
+    function updateStats(result) {
+      if (result === '勝ち') {
+        winCount++;
+      }
+      totalCount++;
+      const winPercentage = ((winCount / totalCount) * 100).toFixed(2);
+      $('#win_count').text('勝利回数: ' + winCount);
+      $('#total_count').text('試行回数: ' + totalCount);
+      $('#win_percentage').text('勝率: ' + winPercentage + '%');
+    }
+
+    $('#gu').on('click', function () {
+      const randomNumber = createRandomNumber(0, 2);
+      const computerHand = getComputerHand(randomNumber);
+      const result = getJankenResult(0, randomNumber);
+      $('#computer_hand').text('コンピュータの手：' + computerHand);
+      $('#result').text('結果：' + result);
+      updateStats(result);
+    });
+
+    $('#cho').on('click', function () {
+      const randomNumber = createRandomNumber(0, 2);
+      const computerHand = getComputerHand(randomNumber);
+      const result = getJankenResult(1, randomNumber);
+      $('#computer_hand').text('コンピュータの手：' + computerHand);
+      $('#result').text('結果：' + result);
+      updateStats(result);
+    });
+
+    $('#par').on('click', function () {
+      const randomNumber = createRandomNumber(0, 2);
+      const computerHand = getComputerHand(randomNumber);
+      const result = getJankenResult(2, randomNumber);
+      $('#computer_hand').text('コンピュータの手：' + computerHand);
+      $('#result').text('結果：' + result);
+      updateStats(result);
+    });
+  </script>
+</body>
+
+</html>

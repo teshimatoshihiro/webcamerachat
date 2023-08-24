@@ -1,0 +1,66 @@
+/* Reset some default margin and padding */
+body,
+h1,
+ul {
+  margin: 0;
+  padding: 0;
+}
+
+/* Set background color and font for the whole page */
+body {
+  background-color: #f0f5f9;
+  font-family: Arial, sans-serif;
+}
+
+/* Style header */
+header {
+  background-color: #283b5b;
+  color: #ffffff;
+  text-align: center;
+  padding: 1rem 0;
+}
+
+/* Style main content */
+main {
+  text-align: center;
+  margin: 2rem auto;
+  background-color: #ffffff;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Style list items */
+li {
+  list-style-type: none;
+  display: inline-block;
+  margin: 0 1rem;
+  cursor: pointer;
+  border: 2px solid #283b5b;
+  border-radius: 5px;
+  padding: 0.5rem 1rem;
+  color: #283b5b;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* Change list item style on hover */
+li:hover {
+  background-color: #283b5b;
+  color: #ffffff;
+}
+
+/* Style computer hand and result sections */
+#computer_hand,
+#result {
+  margin-top: 1.5rem;
+  font-size: 1.2rem;
+  color: #283b5b;
+}
+
+/* Style footer */
+footer {
+  text-align: center;
+  background-color: #283b5b;
+  color: #ffffff;
+  padding: 1rem 0;
+}
